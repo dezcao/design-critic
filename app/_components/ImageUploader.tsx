@@ -93,7 +93,7 @@ export default function ImageUploader({ images, onChange }: ImageUploaderProps) 
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute right-0 top-0 hidden h-5 w-5 items-center justify-center rounded-full bg-black/60 text-xs text-white group-hover:flex"
+                className="absolute right-0 top-0 hidden h-5 w-5 items-center justify-center rounded-full bg-black/60 text-xs text-white group-hover:flex [@media(hover:none)]:flex [@media(hover:none)]:h-6 [@media(hover:none)]:w-6"
               >
                 ×
               </button>
