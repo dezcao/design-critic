@@ -2,6 +2,20 @@ export const runtime = "edge";
 
 import { SYSTEM_PROMPT } from "@/lib/sieve/systemPrompt";
 
+const SUPPORTED_MIME = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"]);
+
+/** File.type은 확장자 기반이라 실제 포맷과 다를 수 있으므로 매직 바이트로 판별한다. */
+function detectMimeType(bytes: Uint8Array): string | null {
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
+  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) return "image/gif";
+  if (
+    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+  ) return "image/webp";
+  return null;
+}
+
 /**
  * 이미지와 텍스트를 받아 Claude에게 디자인 평가를 요청하고 스트리밍으로 반환한다.
  * Cloudflare Pages 엣지 런타임 호환을 위해 Anthropic API 직접 호출 + SSE 수동 파싱 사용.
@@ -9,7 +23,7 @@ import { SYSTEM_PROMPT } from "@/lib/sieve/systemPrompt";
 export async function POST(req: Request) {
   const formData = await req.formData();
 
-  // 이미지 파일을 base64로 변환
+  // 이미지 파일을 base64로 변환 — MIME 타입은 매직 바이트로 탐지해 File.type 불일치를 보정한다
   const imageMessages: { type: "image"; image: string; mimeType: string }[] = [];
   for (const [, value] of formData.entries()) {
     if (value instanceof File && value.type.startsWith("image/")) {
@@ -20,7 +34,14 @@ export async function POST(req: Request) {
         binary += String.fromCharCode(bytes[i]);
       }
       const base64 = btoa(binary);
-      imageMessages.push({ type: "image", image: base64, mimeType: value.type });
+      const mimeType = detectMimeType(bytes) ?? value.type;
+      if (!SUPPORTED_MIME.has(mimeType)) {
+        return new Response(
+          `지원하지 않는 이미지 형식입니다 (${mimeType}). JPEG, PNG, GIF, WebP만 업로드할 수 있습니다.`,
+          { status: 400 }
+        );
+      }
+      imageMessages.push({ type: "image", image: base64, mimeType });
     }
   }
 
