@@ -1,8 +1,5 @@
 export const runtime = "edge";
 
-import { streamText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
-
 const SYSTEM_PROMPT = `당신은 디자인 평론가입니다.
 업로드된 CI(기업 아이덴티티) 이미지와 업종, 디자인 의도를 바탕으로 디자인을 분석합니다.
 
@@ -20,6 +17,7 @@ const SYSTEM_PROMPT = `당신은 디자인 평론가입니다.
 
 /**
  * 이미지와 텍스트를 받아 Claude에게 디자인 평가를 요청하고 스트리밍으로 반환한다.
+ * Cloudflare Pages 엣지 런타임 호환을 위해 Anthropic API 직접 호출 + SSE 수동 파싱 사용.
  */
 export async function POST(req: Request) {
   const formData = await req.formData();
@@ -55,31 +53,55 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n");
 
-  const result = streamText({
-    model: anthropic("claude-sonnet-4-6"),
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: userText },
-          ...imageMessages.map((img) => ({
-            type: "image" as const,
-            image: img.image,
-            mimeType: img.mimeType,
-          })),
-        ],
-      },
-    ],
-    maxOutputTokens: 4000,
+  const apiRes = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4000,
+      stream: true,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: userText },
+            ...imageMessages.map((img) => ({
+              type: "image",
+              source: { type: "base64", media_type: img.mimeType, data: img.image },
+            })),
+          ],
+        },
+      ],
+    }),
   });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      const reader = apiRes.body!.getReader();
+      const decoder = new TextDecoder();
       try {
-        for await (const chunk of result.textStream) {
-          controller.enqueue(encoder.encode(chunk));
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const text = decoder.decode(value);
+          for (const line of text.split("\n")) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") break;
+            try {
+              const json = JSON.parse(data);
+              const delta = json?.delta?.text;
+              if (delta) controller.enqueue(encoder.encode(delta));
+            } catch {
+              // 빈 줄 등 파싱 불가 라인 무시
+            }
+          }
         }
       } catch (err: unknown) {
         const message = (err as Error)?.message ?? "서버 오류가 발생했습니다.";
