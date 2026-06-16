@@ -1,3 +1,10 @@
+# ⚠️ 이 파일은 **설계 노트(기록용)**다. 런타임 원본이 아니다.
+- 실제로 쓰이는 프롬프트는 `lib/sieve/systemPrompt.ts` 하나뿐이다.
+- 프롬프트를 바꿀 땐 **`systemPrompt.ts`를 직접** 수정한다.
+- **이 파일에서 `systemPrompt.ts`를 재생성하지 마라.** (이 문서는 .ts보다 옛날일 수 있음)
+- 내용이 충돌하면 **`systemPrompt.ts`가 정답**이다.
+- 이 문서는 "왜 이렇게 설계했나"를 남겨두는 용도로만 유지한다.
+
 # 디자인 평가 시스템 프롬프트
 ## Design Critic — Vignelli Sieve v1.0
 

@@ -22,6 +22,14 @@ export default function StreamResult({ result, loading, error }: StreamResultPro
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <div className="mb-3 flex justify-end">
+        <button
+          onClick={() => navigator.clipboard.writeText(result)}
+          className="text-xs text-gray-400 hover:text-gray-600"
+        >
+          복사
+        </button>
+      </div>
       {loading && !result && (
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <span className="animate-pulse">분석 중</span>
