@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 interface StreamResultProps {
   result: string;
   loading: boolean;
@@ -10,6 +12,14 @@ interface StreamResultProps {
  * AI 스트리밍 응답을 실시간으로 렌더링하는 컴포넌트.
  */
 export default function StreamResult({ result, loading, error }: StreamResultProps) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -24,10 +34,10 @@ export default function StreamResult({ result, loading, error }: StreamResultPro
     <div className="rounded-lg border border-gray-200 bg-white p-5">
       <div className="mb-3 flex justify-end">
         <button
-          onClick={() => navigator.clipboard.writeText(result)}
-          className="text-xs text-gray-400 hover:text-gray-600"
+          onClick={handleCopy}
+          className={`text-xs transition-colors ${copied ? "text-green-500" : "text-gray-400 hover:text-gray-600"}`}
         >
-          복사
+          {copied ? "복사됨 ✓" : "복사"}
         </button>
       </div>
       {loading && !result && (
