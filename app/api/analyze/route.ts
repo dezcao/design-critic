@@ -81,25 +81,35 @@ export async function POST(req: Request) {
   });
 
   const encoder = new TextEncoder();
+
+  if (!apiRes.ok) {
+    const errText = await apiRes.text();
+    return new Response(`__ERROR__Claude API 오류 (${apiRes.status}): ${errText}`, {
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       const reader = apiRes.body!.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const text = decoder.decode(value);
-          for (const line of text.split("\n")) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const line of lines) {
             if (!line.startsWith("data: ")) continue;
             const data = line.slice(6).trim();
-            if (data === "[DONE]") break;
             try {
               const json = JSON.parse(data);
               const delta = json?.delta?.text;
               if (delta) controller.enqueue(encoder.encode(delta));
             } catch {
-              // 빈 줄 등 파싱 불가 라인 무시
+              // 이벤트 메타데이터 등 파싱 불필요한 줄 무시
             }
           }
         }
