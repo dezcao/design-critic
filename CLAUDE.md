@@ -1,6 +1,6 @@
 # Design Critic — 프로젝트 개요 문서
 > Claude Code 작업 지시서 겸 프로젝트 명세서  
-> 최초 작성: 2025
+> 최초 작성: 2026
 
 ---
 
@@ -159,31 +159,7 @@ Claude API 호출 시 system 파라미터로 전달
 
 ---
 
-## 8. 프로젝트 파일 구조 (목표)
-
-```
-design-critic/
-├── DESIGN_CRITIC_PROJECT.md   ← 이 문서
-├── vignelli_canon.pdf          ← 비넬리 원칙 PDF (별도 제공)
-├── vignelli_principles.md      ← PDF에서 추출한 원칙 정리 (Claude Code 생성)
-├── src/
-│   ├── App.jsx
-│   ├── components/
-│   │   ├── ImageUploader.jsx
-│   │   ├── InputForm.jsx
-│   │   └── EvaluationReport.jsx
-│   ├── prompts/
-│   │   └── systemPrompt.js     ← 비넬리 원칙 포함된 시스템 프롬프트
-│   └── api/
-│       └── claudeClient.js
-├── public/
-├── package.json
-└── vite.config.js
-```
-
----
-
-## 9. 비고 — 철학적 메모
+## 8. 비고 — 철학적 메모
 
 > "디자인은 문제 해결이다. 아름다움은 그 결과로 따라오는 것이다."  
 > — 마시모 비넬리
