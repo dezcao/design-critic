@@ -69,8 +69,8 @@ export async function POST(req: Request) {
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8000,
+      model: "claude-opus-4-8",
+      max_tokens: 16000,
       stream: true,
       system: SYSTEM_PROMPT,
       messages: [
