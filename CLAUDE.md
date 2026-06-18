@@ -87,7 +87,7 @@ Claude Code 작업 시 `vignelli_canon.pdf`를 읽어 아래 항목을 보완할
 | 항목 | 선택 | 이유 |
 |---|---|---|
 | 프레임워크 | React (Vite) | 브라우저 실행, 빠른 프로토타이핑 |
-| AI | Anthropic Claude API (`claude-sonnet-4-20250514`) | 이미지 + 텍스트 동시 처리 가능한 멀티모달 |
+| AI | Anthropic Claude API (`claude-opus-4-8`) | 이미지 + 텍스트 동시 처리 가능한 멀티모달 |
 | 스타일링 | Tailwind CSS | 빠른 UI 구성 |
 | PDF 처리 | Claude Code에서 직접 읽기 | 비넬리 PDF → 시스템 프롬프트 원칙으로 변환 |
 | 배포 | 정적 호스팅 (Vercel 또는 GitHub Pages) | 무료, 간단 |
